@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hygeia - Decentralized Currency</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #f4f4f9;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 0;
+        }
+        header h1 {
+            margin: 0;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .container {
+            margin: 20px;
+        }
+        input {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Hygeia</h1>
+        <p>Fast, eco-friendly, and smart contract compatible decentralized currency</p>
+    </header>
+
+    <div>
+        <button id="connectButton">Connect Wallet</button>
+        <p id="status">Not connected</p>
+    </div>
+
+    <div class="container" id="ico-section" style="display: none;">
+        <h2>Participate in Hygeia ICO</h2>
+        <p>Buy Hygeia tokens using BNB</p>
+        <input type="text" id="buyAmount" placeholder="Enter amount in BNB" />
+        <button id="buyButton">Buy Tokens</button>
+        <p id="icoStatus"></p>
+    </div>
+
+    <div class="container" id="airdrop-section" style="display: none;">
+        <h2>Hygeia Airdrop</h2>
+        <p>Enter your wallet address to claim free tokens</p>
+        <input type="text" id="airdropAddress" placeholder="Enter wallet address" />
+        <button id="airdropButton">Claim Airdrop</button>
+        <p id="airdropStatus"></p>
+    </div>
+
+    <script>
+        let web3;
+        let account;
+
+        // Smart contract details
+        const hygeiaAddress = "YOUR_SMART_CONTRACT_ADDRESS_HERE"; // Replace with deployed contract address
+        const hygeiaAbi = [
+            // Add the ABI array from your Hygeia smart contract
+        ];
+
+        let contract;
+
+        // Connect to Metamask
+        document.getElementById('connectButton').addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    account = accounts[0];
+                    web3 = new Web3(window.ethereum);
+                    contract = new web3.eth.Contract(hygeiaAbi, hygeiaAddress);
+                    document.getElementById('status').innerText = `Connected: ${account}`;
+
+                    // Show ICO and Airdrop sections after connection
+                    document.getElementById('ico-section').style.display = 'block';
+                    document.getElementById('airdrop-section').style.display = 'block';
+                } catch (error) {
+                    console.error("Error connecting to wallet:", error);
+                    document.getElementById('status').innerText = "Connection failed.";
+                }
+            } else {
+                alert("Please install Metamask to use this site.");
+            }
+        });
+
+        // Buy tokens during ICO
+        document.getElementById('buyButton').addEventListener('click', async () => {
+            const amount = document.getElementById('buyAmount').value;
+            if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+                alert("Please enter a valid amount of BNB.");
+                return;
+            }
+
+            try {
+                await contract.methods.buyTokens().send({
+                    from: account,
+                    value: web3.utils.toWei(amount, 'ether'),
+                });
+                document.getElementById('icoStatus').innerText = "Tokens purchased successfully!";
+            } catch (error) {
+                console.error("Error buying tokens:", error);
+                document.getElementById('icoStatus').innerText = "Transaction failed.";
+            }
+        });
+
+        // Claim tokens during Airdrop
+        document.getElementById('airdropButton').addEventListener('click', async () => {
+            const airdropAddress = document.getElementById('airdropAddress').value;
+            if (!airdropAddress || !web3.utils.isAddress(airdropAddress)) {
+                alert("Please enter a valid wallet address.");
+                return;
+            }
+
+            try {
+                await contract.methods.claimAirdrop(airdropAddress).send({
+                    from: account,
+                });
+                document.getElementById('airdropStatus').innerText = "Airdrop claimed successfully!";
+            } catch (error) {
+                console.error("Error claiming airdrop:", error);
+                document.getElementById('airdropStatus').innerText = "Transaction failed.";
+            }
+        });
+    </script>
+</body>
+</html>
